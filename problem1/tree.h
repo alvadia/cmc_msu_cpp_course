@@ -4,9 +4,18 @@
 
 namespace bintree {
     template <typename T>
-    struct TNode {
+    struct TNode : std::enable_shared_from_this<TNode<T>> {
+      
         using TNodePtr = std::shared_ptr<TNode<T>>;
         using TNodeConstPtr = std::shared_ptr<const TNode<T>>;
+
+        // Указатель на предка weak_ptr,
+        // чтбы избежать циклических ссылок.
+        using TWeakPtr = std::weak_ptr<TNode<T>>;
+
+        // Ради возможности передавать указатель на себя,
+        // подключаем наследование от класса и расширяем поле имён
+        using std::enable_shared_from_this<TNode<T>>::shared_from_this;
 
         bool hasLeft() const {
             return bool(left);
@@ -17,7 +26,8 @@ namespace bintree {
         }
 
         bool hasParent() const {
-            return bool(parent);
+	  // Переписан для соответствия weak_ptr
+	  return not bool(parent.expired());
         }
 
         T& getValue() {
@@ -45,36 +55,57 @@ namespace bintree {
         }
 
         TNodePtr getParent() {
-            return parent;
+	  // Переписан для соответствия weak_ptr
+	  return (TNodePtr)parent.lock();
         }
 
-        TNodeConstPtr getParent() const {
-            return parent;
+        TNodeConstPtr getParent() const{
+	  // Переписан для соответствия weak_ptr
+	  return (TNodeConstPtr)parent.lock();
         }
 
         static TNodePtr createLeaf(T v) {
             return std::make_shared<TNode>(v);
         }
 
-        static TNodePtr fork(T v, TNode* left, TNode* right) {
-            TNodePtr ptr = std::make_shared<TNode>(v, left, right);
-            setParent(ptr->getLeft(), ptr);
-            setParent(ptr->getRight(), ptr);
+        static TNodePtr fork(T v, TNodePtr left, TNodePtr right) {
+	    // Переписан. Изменены параметры, и прототип использования.
+	    // Параметры входа - умные указатели, а не raw_pointers
+	    // Иначе возникает ошибка взаимного существования
+	    // двух изолированных указателей на один объект.
+	    // (Вызывает проблемы при удалении)
+            TNodePtr ptr = std::make_shared<TNode>(v);
+	    // Объект создаётся с помощью конструктора с одним параметром,
+	    // затем изменяется с помощью вызова функций.
+	    // Это позволяет избежать эффектов,
+	    // когда новый потомок имеет предка,
+	    // сохраняющего на него ссылку.
+	    // Данный подход меняет изначальную логику -
+	    // там ссылка сохранялась,
+	    // однако не меняет семантику метода.
+	    ptr->replaceLeft(left);
+	    ptr->replaceRight(right);
             return ptr;
         }
 
         TNodePtr replaceLeft(TNodePtr l) {
-            setParent(l, TNodePtr(this));
+	    //Поправлена особенность работы с this:
+	    //ради исключения создания двух указателей на один объект,
+	    //не знающих друг о друге,
+	    //необходима передача shared_ptr, что обеспечивается
+	    //конструкцией shared_from_this
+            setParent(l, shared_from_this());
             setParent(left, nullptr);
             std::swap(l, left);
-            return l;
+	    return l;
         }
 
         TNodePtr replaceRight(TNodePtr r) {
-            setParent(r, TNodePtr(this));
+	    // --//-- replaceLeft
+	    setParent(r, shared_from_this());
             setParent(right, nullptr);
             std::swap(r, right);
-            return r;
+	    return r;
         }
 
         TNodePtr replaceRightWithLeaf(T v) {
@@ -96,22 +127,31 @@ namespace bintree {
         T value;
         TNodePtr left = nullptr;
         TNodePtr right = nullptr;
-        TNodePtr parent = nullptr;
+        // Указатель на родителя сделан слабым,
+        // что позволяет избежать циклических ссылок.
+        // Однако уже не получится присвоить ему значение nullptr.
+        TWeakPtr parent = TWeakPtr();
 
+    public:
+        //необходимо для строки TNode<int>::createLeaf(1),
+        //где внутри createLeaf вызывается конструктор типа
+        //в выделенной make_shared памяти.
         TNode(T v)
             : value(v)
-        {
-        }
+        {}
+
+    private:
+        //Недостижимый в текущей редакции код,
+        // работающий с сырыми указателями.
         TNode(T v, TNode* left, TNode* right)
             : value(v)
             , left(left)
             , right(right)
-        {
-        }
+        {}
 
         static void setParent(TNodePtr node, TNodePtr parent) {
-            if (node)
-                node->parent = parent;
-        }
+	  if (node)
+		node->parent = parent;
+	}
     };
 }

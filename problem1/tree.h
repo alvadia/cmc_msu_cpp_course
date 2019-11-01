@@ -65,7 +65,16 @@ namespace bintree {
         }
 
         static TNodePtr createLeaf(T v) {
-            return std::make_shared<TNode>(v);
+	    // Чтобы можно было создавать объект в make_shared,
+	    // make_shared должен иметь доступ к его конструктору.
+	    // Исправлено на явный вызов конструктора,
+	    // хотя и немного меняет семантику - make_shared
+	    // старается расположить объект и управляющий блок рядом,
+	    // в одном сегменте памяти.
+	    // Сейчас же вызывается два раза размещение -
+	    // отдельно объекта и управляющего блока.
+	    TNodePtr result (new TNode(v));
+            return result;
         }
 
         static TNodePtr fork(T v, TNodePtr left, TNodePtr right) {
@@ -74,7 +83,7 @@ namespace bintree {
 	    // Иначе возникает ошибка взаимного существования
 	    // двух изолированных указателей на один объект.
 	    // (Вызывает проблемы при удалении)
-            TNodePtr ptr = std::make_shared<TNode>(v);
+            TNodePtr ptr = createLeaf(v);
 	    // Объект создаётся с помощью конструктора с одним параметром,
 	    // затем изменяется с помощью вызова функций.
 	    // Это позволяет избежать эффектов,
@@ -132,18 +141,14 @@ namespace bintree {
         // Однако уже не получится присвоить ему значение nullptr.
         TWeakPtr parent = TWeakPtr();
 
-    public:
-        //необходимо для строки TNode<int>::createLeaf(1),
-        //где внутри createLeaf вызывается конструктор типа
-        //в выделенной make_shared памяти.
+    private:
         TNode(T v)
             : value(v)
         {}
 
     private:
-        //Недостижимый в текущей редакции код,
-        // работающий с сырыми указателями.
-        TNode(T v, TNode* left, TNode* right)
+        //Недостижимый в текущей редакции код.
+        TNode(T v, TNodePtr left, TNodePtr right)
             : value(v)
             , left(left)
             , right(right)

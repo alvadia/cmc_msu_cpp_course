@@ -34,8 +34,15 @@ public:
 	}
     }
 
-    const Array& operator=(const Array&array){
-        return array;
+    const Array& operator=(const Array &array){
+      // good operator =,
+      // without any mess with data pointers after copying
+        size = array.size;
+        data = new T[size];
+        for (int i = 0; i < array.size; ++i) {
+            data[i] = array.data[i];
+        }
+        return *this;
     }
   
     const size_t GetSize() const {

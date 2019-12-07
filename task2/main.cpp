@@ -1,24 +1,20 @@
 #include <iostream>
 #include <functional>
-#include "factory.h"
 #include "factory.cpp"
-#include "my_functions.h"
 #include "my_functions.cpp"
-#//include <gmock/gmock.h>
-#include <gtest/gtest.h>
+#include "test.cpp"
 
 using TFunctionPtr = std::shared_ptr<TFunction>;
 
-int main(){
-    
+int main(int argc, char* argv[]){
     TFunctionFactory factory;
     std::vector<TFunctionPtr> cont;
 
     auto id = factory.Create(Type::ident);
 cont.push_back(id);
-    auto constant = factory.Create(Type::constant, 42);
+    auto constant = factory.Create(Type::constant, 42.0);
 cont.push_back(constant);
-    auto power = factory.Create(Type::exponentiation, 2);
+    auto power = factory.Create(Type::exponentiation, 2.0);
 cont.push_back(power);
     auto exp = factory.Create(Type::exp, 1.1);
 cont.push_back(exp);
@@ -43,7 +39,7 @@ testee.push_back(g);
     auto poly_func2 = factory.Create(Type::polynomial, std::vector<double>({1.0, -2.0, 1.0}));
     double root = optimize_newton(poly_func2, 3.0);
 
-    std::cout << "root = " << root << std::endl;
-
-    return 0;
+    std::cout << poly_func2->ToString() << " root = " << root << std::endl;
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

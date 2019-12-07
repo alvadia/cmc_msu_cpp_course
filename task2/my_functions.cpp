@@ -1,3 +1,4 @@
+#pragma once
 #include "my_functions.h"
 
 #define _USE_MATH_DEFINES // for C++
@@ -16,8 +17,7 @@ TFunctionConstant::TFunctionConstant(const std::any &parameters) {
     try {
         value = std::any_cast<double>(parameters);
     } catch (const std::bad_any_cast& e) {
-        int int_value = std::any_cast<int>(parameters);
-        value = static_cast<double>(int_value);
+        throw std::logic_error("Bad constant cast: can't extract double value.");
     }}
 
 inline double TFunctionConstant::operator()(double x) const {return value;}
@@ -50,8 +50,7 @@ inline double TFunctionPower::GetDerivative(double x) const {
 }
 
 
-TFunctionExponent::TFunctionExponent(const std::any &parameters) 
-        : TFunctionPower(std::any(M_E)) {}
+TFunctionExponent::TFunctionExponent(const std::any &parameters) {}
 
 std::string TFunctionExponent::ToString() const {
     return "e^x";

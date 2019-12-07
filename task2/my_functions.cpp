@@ -80,9 +80,9 @@ double TFunctionPolynomial::operator()(double x) const {
 std::string TFunctionPolynomial::ToString() const {
     std::string partial_sum = "";
     if (coefficients.size() >= 1) partial_sum += std::to_string(coefficients[0]);
-    if (coefficients.size() >= 2) partial_sum += " " + std::to_string(coefficients[1]) + "*x";
+    if (coefficients.size() >= 2) partial_sum += " + " + std::to_string(coefficients[1]) + "*x";
     for (int i = 2; i < coefficients.size(); ++i) {
-        partial_sum += " " + std::to_string(coefficients[i]) + "*x^" + std::to_string(i);
+        partial_sum += " + " + std::to_string(coefficients[i]) + "*x^" + std::to_string(i);
     }
     return partial_sum;
 }

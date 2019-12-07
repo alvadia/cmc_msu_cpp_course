@@ -71,3 +71,16 @@ TEST(Test, TFunctionPolynomial) {
 	}
     }
 }
+TEST(Test, FactoryBuilding){
+    TFunctionFactory factory;
+    auto id = factory.Create(Type::ident);
+    auto constant = factory.Create(Type::constant, 42.0);
+    auto power = factory.Create(Type::exponentiation, 2.0);
+    auto exp = factory.Create(Type::exp, 1.1);
+    auto poly = factory.Create(Type::polynomial, std::vector<double>({1.0, 0.0, 2.0, 3.0}));
+EXPECT_EQ("x: for x = 10 is 10.000000", id->ToString() + ": for x = 10 is " + std::to_string((*id)(10)));
+EXPECT_EQ("42.000000: for x = 10 is 42.000000", constant->ToString() + ": for x = 10 is " + std::to_string((*constant)(10)));
+EXPECT_EQ("x^2.000000: for x = 10 is 100.000000", power->ToString() + ": for x = 10 is " + std::to_string((*power)(10)));
+EXPECT_EQ("e^x: for x = 10 is 22026.465795", exp->ToString() + ": for x = 10 is " + std::to_string((*exp)(10)));
+    EXPECT_EQ("1.000000 + 0.000000*x + 2.000000*x^2 + 3.000000*x^3: for x = 10 is 3201.000000", poly->ToString() + ": for x = 10 is " + std::to_string((*poly)(10)));
+}

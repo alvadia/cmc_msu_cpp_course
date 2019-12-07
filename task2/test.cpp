@@ -28,21 +28,21 @@ TEST(Test, TFunctionConstant) {
 TEST(Test, TFunctionPower) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> distribution(-2<<16, 2<<16);
+    std::uniform_real_distribution<double> distribution(0, 10);
     for (int i = 0; i < 1000; ++i){
         double param = distribution(gen);
         auto testee = TFunctionPower(std::any(param));
 	double arg = distribution(gen);
     	EXPECT_DOUBLE_EQ(std::pow(arg, param), testee(arg));
-        EXPECT_DOUBLE_EQ(param * std::pow(arg, param - 1), testee.GetDerivative(arg));
+        EXPECT_DOUBLE_EQ(param * std::pow(arg, param - 1.0), testee.GetDerivative(arg));
     }
 }
 TEST(Test, TFunctionExponent) {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_real_distribution<double> distribution(-2<<16,2<<16);
+    std::uniform_real_distribution<double> distribution(-708,708);
     for (int i = 0; i < 1000; ++i){
-        auto testee = TFunctionPower(std::any(Type::none));
+        auto testee = TFunctionExponent(std::any(Type::none));
 	double arg = distribution(gen);
     	EXPECT_DOUBLE_EQ(std::exp(arg), testee(arg));
         EXPECT_DOUBLE_EQ(std::exp(arg), testee.GetDerivative(arg));

@@ -27,12 +27,7 @@ inline std::string TFunctionConstant::ToString() const {return std::to_string(va
 inline double TFunctionConstant::GetDerivative(double x) const {return 0;}
 
 TFunctionPower::TFunctionPower(const std::any &parameters){
-    try {
-        exponent = std::any_cast<double>(parameters);
-    } catch (const std::bad_any_cast& e) {
-        int int_value = std::any_cast<int>(parameters);
-        exponent = static_cast<double>(int_value);
-    }
+    exponent = std::any_cast<double>(parameters);
 }
 
 inline double TFunctionPower::operator()(double x) const {
@@ -52,8 +47,17 @@ inline double TFunctionPower::GetDerivative(double x) const {
 
 TFunctionExponent::TFunctionExponent(const std::any &parameters) {}
 
+inline double TFunctionExponent::operator()(double x) const {
+    return std::exp(x);
+}
+
+
 std::string TFunctionExponent::ToString() const {
     return "e^x";
+}
+
+inline double TFunctionExponent::GetDerivative(double x) const {
+    return std::exp(x);
 }
 
 TFunctionPolynomial::TFunctionPolynomial(const std::any &parameters) {

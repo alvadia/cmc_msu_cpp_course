@@ -57,10 +57,12 @@ public:
     virtual double GetDerivative(double x) const override;
 };
 
-class TFunctionExponent: public TFunctionPower {
+class TFunctionExponent: public TFunction {
 public:
     TFunctionExponent(const std::any &parameters);
     virtual std::string ToString() const override;
+    virtual double operator()(double x) const override;
+    virtual double GetDerivative(double x) const override;
 };
 
 class TFunctionPolynomial: public TFunction {

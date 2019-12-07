@@ -1,6 +1,7 @@
 #include <unordered_map>
 #include <any>
 #include <memory>
+#include <exception>
 
 #include "factory.h"
 #include "my_functions.h"
@@ -13,16 +14,15 @@ class TFunctionFactory::PImpl {
     };
 
     using TFabricPtr = std::shared_ptr<Fabric>;
-    using TRegisteredFabrics = std::unordered_map<std::string, TFabricPtr>;
     
-    TRegisteredFabrics all_fabrics;
+    std::unordered_map<Type, TFabricPtr> all_fabrics;
 
 public:
 
-    template <typename TObject>
+    template <typename T>
     class ProductionLine: public Fabric {
-        std::shared_ptr<TFunction> Create(const std::any &parameters ) const override {
-            return std::make_shared<TObject>(parameters);
+        std::shared_ptr<TFunction> Create(const std::any &parameters) const override {
+            return std::make_shared<T>(parameters);
         }
     };
 
@@ -31,8 +31,8 @@ public:
     }
 
     template <typename T>
-    void register_one(const Type type) {
-        TRegisteredFabrics[type] = std::make_shared<ProductionLine<T>>();
+    void register_one(Type type) {
+        all_fabrics[type] = std::make_shared<ProductionLine<T>>();
     }
 
     void register_all() {
@@ -43,10 +43,10 @@ public:
         register_one<TFunctionPolynomial>(Type::polynomial);
     }
 
-    std::shared_ptr<TFunction> CreateFunction(Type key, const std::any &params) const {
-        auto fabric = TRegisteredFabrics.find(key);
-        if (fabric == TRegisteredFabrics.end()) {
-            throw std::domain_error;
+    std::shared_ptr<TFunction> CreateFunction(Type key, const std::any &params = std::any(Type::none)) const {
+        auto fabric = all_fabrics.find(key);
+        if (fabric == all_fabrics.end()) {
+            throw std::domain_error("0");
         } else {
             return fabric->second->Create(params);
         }
@@ -54,7 +54,7 @@ public:
 
     std::vector<Type> get_all_fabrics () const {
         std::vector<Type> result;
-        for (auto& tuple : TRegisteredFabrics) {
+        for (auto& tuple : all_fabrics) {
             result.push_back(tuple.first);
         }
         return result;
@@ -62,11 +62,11 @@ public:
 
 };
 
-std::shared_ptr<TFunction> TFactory::CreateFunction(Type type, const std::any &parameters) {
+std::shared_ptr<TFunction> TFunctionFactory::Create(Type type, const std::any &parameters) {
     return Implementation->CreateFunction(type, parameters);
 }
 
-TFactory::TFactory() 
-    : Implementation(std::make_shared<TFactory::PImpl>()) {}
+TFunctionFactory::TFunctionFactory() 
+    : Implementation(std::make_shared<TFunctionFactory::PImpl>()) {}
 
-TFactory::~TFactory(){}
+TFunctionFactory::~TFunctionFactory(){}

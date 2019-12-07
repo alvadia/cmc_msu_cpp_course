@@ -12,7 +12,7 @@ class TFunctionFactory {
 
 public:
     TFunctionFactory();
-    std::shared_ptr<TFunction> Create(const Type type, const std::any &params);
+    std::shared_ptr<TFunction> Create(Type type, const std::any &params = std::any(Type::none));
     std::vector<Type> get_all_fabrics();
     ~TFunctionFactory();
 };

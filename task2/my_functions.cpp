@@ -2,13 +2,15 @@
 
 #define _USE_MATH_DEFINES // for C++
 
+TFunction::TFunction(){}
+
 TFunctionIdentity::TFunctionIdentity(const std::any &parameters) {}
 
-inline double TFunctionIdentity::operator()(double x) const noexcept {}
+inline double TFunctionIdentity::operator()(double x) const {return x;}
 
-inline const std::string TFunctionIdentity::ToString() const noexcept {return "x";}
+inline std::string TFunctionIdentity::ToString() const {return "x";}
 
-inline const double IdentFunc::GetDerivative(double x) const noexcept {return 1;}
+inline double TFunctionIdentity::GetDerivative(double x) const {return 1;}
 
 TFunctionConstant::TFunctionConstant(const std::any &parameters) {
     try {
@@ -22,7 +24,7 @@ inline double TFunctionConstant::operator()(double x) const {return value;}
 
 inline std::string TFunctionConstant::ToString() const {return std::to_string(value);}
 
-inline const double TFunctionConstant::GetDerivative(double x) const noexcept {return 0;}
+inline double TFunctionConstant::GetDerivative(double x) const {return 0;}
 
 TFunctionPower::TFunctionPower(const std::any &parameters){
     try {
@@ -34,22 +36,17 @@ TFunctionPower::TFunctionPower(const std::any &parameters){
 }
 
 inline double TFunctionPower::operator()(double x) const {
-    return std::pow(x, power);
+    return std::pow(x, exponent);
 }
 
 inline std::string TFunctionPower::ToString() const {
-    switch (exponent) {
-    case 0.0:
-	return "1";
-	case 1.0:
-	return "x";
-	default:
-	return "x^" + std::to_string(exponent);
-    }
+    if (exponent==0.0) return "1";
+    if (exponent==1.0) return "x";
+    return "x^" + std::to_string(exponent);
 }
 
 inline double TFunctionPower::GetDerivative(double x) const {
-    return power * std::pow(x, power - 1);
+    return exponent * std::pow(x, exponent - 1);
 }
 
 
@@ -63,10 +60,9 @@ std::string TFunctionExponent::ToString() const {
 TFunctionPolynomial::TFunctionPolynomial(const std::any &parameters) {
     try {
         coefficients = std::any_cast<std::vector<double>>(parameters);
-	coefficients.shrink_to_fit()
-    } catch (const std::bad_any_cast& e) {
-	coefficients = std::any_cast<std::vector<int>>(parameters);
 	coefficients.shrink_to_fit();
+    } catch (const std::bad_any_cast& e) {
+	//rethrow;
     }
 }
 
@@ -103,7 +99,7 @@ TFunctionComposition::TFunctionComposition(const std::shared_ptr<TFunction> &aug
         , addend(addend)
 	, type(type) {}
 
-inline double TFunctionComposition::operator()(double x) const noexcept {
+inline double TFunctionComposition::operator()(double x) const {
 	switch (type) {
 	case Type::addition:
     		return (*augend)(x) + (*addend)(x);
@@ -113,10 +109,12 @@ inline double TFunctionComposition::operator()(double x) const noexcept {
 		return (*augend)(x) * (*addend)(x);
 	case Type::division:
 		return (*augend)(x) / (*addend)(x);
+	default:
+		return 0.0;
 	}
 }
 
-inline std::string TFunctionComposition::ToString() const noexcept {
+inline std::string TFunctionComposition::ToString() const {
 	std::string op0 = "(" + augend->ToString() + ")";
 	std::string op1 = "(" + addend->ToString() + ")";
 	switch (type) {
@@ -128,6 +126,8 @@ inline std::string TFunctionComposition::ToString() const noexcept {
 		return op0 + " * " + op1;
 	case Type::division:
 		return op0 + " / " + op1;
+	default:
+		return "ERROR";
 	}
 }
 
@@ -139,45 +139,49 @@ inline double TFunctionComposition::GetDerivative(double x) const {
     		return u_p + v_p;
 	case Type::subtraction:
 		return u_p - v_p;
-	case Type::multiplication:
+	case Type::multiplication: {
 		double u = (*augend)(x);
 		double v = (*addend)(x);
 		return u_p * v + u * v_p;
-	case Type::division:
+		}
+	case Type::division: {
 		double u = (*augend)(x);
 		double v = (*addend)(x);
 		return (u_p * v - u * v_p) / (v*v);
+		}
+	default:
+		return 0.0;
 	}
 }
 
-TFunctionComposition operator+(const std::shared_ptr<TFunction> &arg0, 
+std::shared_ptr<TFunctionComposition> operator+(const std::shared_ptr<TFunction> &arg0, 
                         const std::shared_ptr<TFunction> &arg1) {
-    return TFunctionComposition(arg0, arg1, Type::addition);
+    return std::make_shared<TFunctionComposition>(arg0, arg1, Type::addition);
 }
 
-TFunctionComposition operator-(const std::shared_ptr<TFunction> &arg0, 
+std::shared_ptr<TFunctionComposition> operator-(const std::shared_ptr<TFunction> &arg0, 
                         const std::shared_ptr<TFunction> &arg1) {
-    return TFunctionComposition(arg0, arg1, Type::subtraction);
+    return std::make_shared<TFunctionComposition>(arg0, arg1, Type::subtraction);
 }
 
-TFunctionComposition operator*(const std::shared_ptr<TFunction> &arg0, 
+std::shared_ptr<TFunctionComposition> operator*(const std::shared_ptr<TFunction> &arg0, 
                         const std::shared_ptr<TFunction> &arg1) {
-    return TFunctionComposition(arg0, arg1, Type::multiplication);
+    return std::make_shared<TFunctionComposition>(arg0, arg1, Type::multiplication);
 }
 
-TFunctionComposition operator/(const std::shared_ptr<TFunction> &arg0, 
+std::shared_ptr<TFunctionComposition> operator/(const std::shared_ptr<TFunction> &arg0, 
                         const std::shared_ptr<TFunction> &arg1) {
-    return TFunctionComposition(arg0, arg1, Type::division);
+    return std::make_shared<TFunctionComposition>(arg0, arg1, Type::division);
 }
 
 double optimize_newton(const std::shared_ptr<TFunction> &func,
-                               double x0,
+                               double x0 = 0.0,
                                int maxiter = 1024, double tol = 0.0000001) {
 
     double p0 = x0;
     int funcalls = 0;
     for (int i=0; i < maxiter; ++i){
-            double fval = func(p0);
+            double fval = (*func)(p0);
             funcalls++;
             if (fval==0)
                 return p0;
@@ -185,10 +189,12 @@ double optimize_newton(const std::shared_ptr<TFunction> &func,
             funcalls++;
             if (fder == 0) {
                 std::cerr << "Derivative was zero.";
-                std::string msg = " Failed to converge after " + std::to_string(itr+1) + " iterations, value is " + std::to_string(p0) + ".";
+                std::string msg = " Failed to converge after " + std::to_string(i+1) + " iterations, value is " + std::to_string(p0) + ".";
+		}
             double newton_step = fval / fder;
             if (std::abs(newton_step) < tol)
                 return p0;
             p0 = p0 - newton_step;
 	}
+    return 0.0;
 }

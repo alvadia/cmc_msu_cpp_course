@@ -13,18 +13,18 @@ enum class Type {none, ident , constant , exponentiation , exp , polynomial, add
 
 class TFunction {
 public:
-    TFunction() = delete;
+    TFunction();
     virtual double operator()(double x) const = 0;
     virtual std::string ToString() const = 0;
     virtual double GetDerivative(double x) const = 0;
 
-    friend TFunctionComposition operator+(const std::shared_ptr<TFunction> &left, 
+    friend std::shared_ptr<TFunctionComposition> operator+(const std::shared_ptr<TFunction> &left, 
                                    const std::shared_ptr<TFunction> &right);
-    friend TFunctionComposition operator-(const std::shared_ptr<TFunction> &left, 
+    friend std::shared_ptr<TFunctionComposition> operator-(const std::shared_ptr<TFunction> &left, 
                                     const std::shared_ptr<TFunction> &right);
-    friend TFunctionComposition operator*(const std::shared_ptr<TFunction> &left, 
+    friend std::shared_ptr<TFunctionComposition> operator*(const std::shared_ptr<TFunction> &left, 
                                    const std::shared_ptr<TFunction> &right);
-    friend TFunctionComposition operator/(const std::shared_ptr<TFunction> &left, 
+    friend std::shared_ptr<TFunctionComposition> operator/(const std::shared_ptr<TFunction> &left, 
                                   const std::shared_ptr<TFunction> &right);
 };
 
@@ -60,9 +60,7 @@ public:
 class TFunctionExponent: public TFunctionPower {
 public:
     TFunctionExponent(const std::any &parameters);
-    virtual double operator()(double x) const override;
     virtual std::string ToString() const override;
-    virtual double GetDerivative(double x) const override;
 };
 
 class TFunctionPolynomial: public TFunction {

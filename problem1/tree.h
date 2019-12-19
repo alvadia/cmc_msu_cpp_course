@@ -56,12 +56,12 @@ namespace bintree {
 
         TNodePtr getParent() {
 	  // Переписан для соответствия weak_ptr
-	  return (TNodePtr)parent.lock();
+	  return parent.lock();
         }
 
         TNodeConstPtr getParent() const{
 	  // Переписан для соответствия weak_ptr
-	  return (TNodeConstPtr)parent.lock();
+	  return parent.lock();
         }
 
         static TNodePtr createLeaf(T v) {

@@ -1,8 +1,6 @@
 #include <iostream>
 #include <vector>
 
-// File had english comments, so I decided not to change its style.
-
 template <typename T>
 class Array {
 private:
@@ -24,25 +22,25 @@ public:
         return data[i];
     }
 
-    Array(const Array &array) {
-      // good copy constructor,
-      // without any mess with data pointers after copying
+    Array(const Array &array) = delete;
+    const Array& operator=(const Array &array) = delete;
+    Array& operator=(Array &&array) {
+        //if (&array == this) return *this;
+        if (data) {
+            delete [] data;
+        }
+        data = array.data;
+        array.data = nullptr;
         size = array.size;
-        data = new T[size];
-	for (size_t i = 0; i != size; ++i) {
-	    data[i] = array.data[i];
-	}
+        array.size = 0;
+        return *this;
     }
 
-    const Array& operator=(const Array &array){
-      // good operator =,
-      // without any mess with data pointers after copying
-        size = array.size;
-        data = new T[size];
-        for (int i = 0; i < array.size; ++i) {
-            data[i] = array.data[i];
-        }
-        return *this;
+    Array(Array && array) noexcept {
+	data = array.data;
+        array.data = nullptr;
+	size = array.size;
+        array.size = 0;
     }
   
     const size_t GetSize() const {
@@ -56,20 +54,18 @@ public:
 
 template <typename T>
 Array<T> GetArray(size_t n, T x) {
-  Array<T> A(n); //constructor temporary object
+    Array<T> A(n);
     for (size_t i = 0; i != n; ++i) {
-      A[i] = x;//nonconstant []
+        A[i] = x;
     }
-    return A;//return non-const object
+    return A;
 }
 
 template <typename T>
 std::ostream& operator<<(std::ostream& out, const Array<T>& A) {
-    for (size_t i = 0; i != A.GetSize(); ++i) {//getter
-      out << A[i] << " ";//const []
-      //print 0
-    } //loop n times
-    //I don't know why, but 380...0 was printed last in first try.
+    for (size_t i = 0; i != A.GetSize(); ++i) {
+      out << A[i] << " ";
+    }
     out << "\n";
     return out;
 }
@@ -77,17 +73,13 @@ std::ostream& operator<<(std::ostream& out, const Array<T>& A) {
 int main() {
     size_t n;
     std::cin >> n;
-    Array<int> A(n); //constructor
-    A = GetArray<int>(n, 0); //getarray
-    //operator= corrected code - two objects with one data pointer were here previously, but now one object / one pointer
-    //destructor of internal temporary copy
-    std::cout << A << "\n";// operator <<
-    //one can destoy A here, but it will live for the end of main
+    Array<int> A(n);
+    A = GetArray<int>(n, 0);
+    std::cout << A << "\n";
     std::vector<Array<int>> vec;
-    Array<int> B(n); // constructor
-    // fill vector of 100 arrays
+    Array<int> B(n);
     for (size_t i = 0; i < 100; ++i) {
-      B = GetArray<int>(n, i);//situation is similar to A=...
-      vec.push_back(B);//copy constuctor
+      B = GetArray<int>(n, i);
+      vec.push_back(std::move(B));
     }
 }

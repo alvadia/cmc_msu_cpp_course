@@ -6,7 +6,7 @@ TEST(Test, TFunctionIdentity) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distribution(-2<<16, 2<<16);
-    auto testee = TFunctionIdentity(std::any(Type::none));
+    auto testee = TFunctionIdentity(Type::none);
     for (int i = 0; i < 1000; ++i){
 	double arg = distribution(gen);
     	EXPECT_DOUBLE_EQ(arg, testee(arg));
@@ -19,7 +19,7 @@ TEST(Test, TFunctionConstant) {
     std::uniform_real_distribution<double> distribution(-2<<16, 2<<16);
     for (int i = 0; i < 1000; ++i){
         double constant = distribution(gen);
-        auto testee = TFunctionConstant(std::any(constant));
+        auto testee = TFunctionConstant(constant);
 	double arg = distribution(gen);
     	EXPECT_DOUBLE_EQ(constant, testee(arg));
         EXPECT_DOUBLE_EQ(0.0, testee.GetDerivative(arg));
@@ -31,7 +31,7 @@ TEST(Test, TFunctionPower) {
     std::uniform_real_distribution<double> distribution(0, 10);
     for (int i = 0; i < 1000; ++i){
         double param = distribution(gen);
-        auto testee = TFunctionPower(std::any(param));
+        auto testee = TFunctionPower(param);
 	double arg = distribution(gen);
     	EXPECT_DOUBLE_EQ(std::pow(arg, param), testee(arg));
         EXPECT_DOUBLE_EQ(param * std::pow(arg, param - 1.0), testee.GetDerivative(arg));
@@ -42,7 +42,7 @@ TEST(Test, TFunctionExponent) {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<double> distribution(-708,708);
     for (int i = 0; i < 1000; ++i){
-        auto testee = TFunctionExponent(std::any(Type::none));
+        auto testee = TFunctionExponent(Type::none);
 	double arg = distribution(gen);
     	EXPECT_DOUBLE_EQ(std::exp(arg), testee(arg));
         EXPECT_DOUBLE_EQ(std::exp(arg), testee.GetDerivative(arg));
@@ -57,7 +57,7 @@ TEST(Test, TFunctionPolynomial) {
 	std::vector<double> params;
 	for (int j = 0; j < int_generator(gen); ++j)
 		params.push_back(distribution(gen));
-        auto testee = TFunctionPolynomial(std::any(params));
+        auto testee = TFunctionPolynomial(params);
         for (int j = 0; j < 10; ++j){
 		double arg = distribution(gen);
 		double f = params[0];
@@ -73,7 +73,7 @@ TEST(Test, TFunctionPolynomial) {
 }
 TEST(Test, FactoryBuilding){
     TFunctionFactory factory;
-    auto id = factory.Create(Type::ident);
+    auto id = factory.Create(Type::ident, Type::none);
     auto constant = factory.Create(Type::constant, 42.0);
     auto power = factory.Create(Type::exponentiation, 2.0);
     auto exp = factory.Create(Type::exp, 1.1);

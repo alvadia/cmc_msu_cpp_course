@@ -5,7 +5,11 @@
 
 TFunction::TFunction(){}
 
-TFunctionIdentity::TFunctionIdentity(const std::any &parameters) {}
+template<typename T>
+TFunctionIdentity::TFunctionIdentity(const T &parameters) {
+    T x;
+    check_param(x);
+}
 
 inline double TFunctionIdentity::operator()(double x) const {return x;}
 
@@ -13,12 +17,19 @@ inline std::string TFunctionIdentity::ToString() const {return "x";}
 
 inline double TFunctionIdentity::GetDerivative(double x) const {return 1;}
 
-TFunctionConstant::TFunctionConstant(const std::any &parameters) {
+template<typename T>
+inline double check_param(T x) {
     try {
-        value = std::any_cast<double>(parameters);
-    } catch (const std::bad_any_cast& e) {
-        throw std::logic_error("Bad constant cast: can't extract double value.");
-    }}
+       return (double) x;
+    } catch (std::logic_error) {
+       throw std::logic_error("Convert Exception Parameter");
+    }
+}
+
+template<typename T>
+TFunctionConstant::TFunctionConstant(const T &parameters) {
+        value = check_param(parameters);
+}
 
 inline double TFunctionConstant::operator()(double x) const {return value;}
 
@@ -26,8 +37,9 @@ inline std::string TFunctionConstant::ToString() const {return std::to_string(va
 
 inline double TFunctionConstant::GetDerivative(double x) const {return 0;}
 
-TFunctionPower::TFunctionPower(const std::any &parameters){
-    exponent = std::any_cast<double>(parameters);
+template<typename T>
+TFunctionPower::TFunctionPower(const T &parameters){
+    exponent = check_param(parameters);
 }
 
 inline double TFunctionPower::operator()(double x) const {
@@ -44,8 +56,11 @@ inline double TFunctionPower::GetDerivative(double x) const {
     return exponent * std::pow(x, exponent - 1);
 }
 
-
-TFunctionExponent::TFunctionExponent(const std::any &parameters) {}
+template<typename T>
+TFunctionExponent::TFunctionExponent(const T &parameters) {
+    T x;
+    check_param(x);
+}
 
 inline double TFunctionExponent::operator()(double x) const {
     return std::exp(x);
@@ -60,13 +75,14 @@ inline double TFunctionExponent::GetDerivative(double x) const {
     return std::exp(x);
 }
 
-TFunctionPolynomial::TFunctionPolynomial(const std::any &parameters) {
-    try {
-        coefficients = std::any_cast<std::vector<double>>(parameters);
-	coefficients.shrink_to_fit();
-    } catch (const std::bad_any_cast& e) {
-	//rethrow;
-    }
+template<typename T>
+TFunctionPolynomial::TFunctionPolynomial(const T &parameters) {
+        try {
+            for (auto x : parameters ) {coefficients.push_back(check_param(x));}
+            coefficients.shrink_to_fit();
+        } catch (std::logic_error) {
+          throw std::logic_error("Can't convert to iterable.");
+        }
 }
 
 double TFunctionPolynomial::operator()(double x) const {

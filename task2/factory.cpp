@@ -11,7 +11,8 @@ class TFunctionFactory::PImpl {
     class Fabric {
     public:
         virtual ~Fabric(){}
-        virtual std::shared_ptr<TFunction> Create(const std::any &parameters) const = 0;
+        template <typename A>
+        std::shared_ptr<TFunction> Create(const A &parameters) const;
     };
 
     using TFabricPtr = std::shared_ptr<Fabric>;
@@ -22,7 +23,8 @@ public:
 
     template <typename T>
     class ProductionLine: public Fabric {
-        std::shared_ptr<TFunction> Create(const std::any &parameters) const override {
+        template <typename A>
+        std::shared_ptr<TFunction> Create(const A &parameters) const {
             return std::make_shared<T>(parameters);
         }
     };
@@ -43,13 +45,13 @@ public:
         register_one<TFunctionExponent>(Type::exp);
         register_one<TFunctionPolynomial>(Type::polynomial);
     }
-
-    std::shared_ptr<TFunction> CreateFunction(Type key, const std::any &params = std::any(Type::none)) const {
+    template <typename A>
+    std::shared_ptr<TFunction> CreateFunction(Type key, const A &params) const {
         auto fabric = all_fabrics.find(key);
         if (fabric == all_fabrics.end()) {
             throw std::domain_error("0");
         } else {
-            return fabric->second->Create(params);
+            return fabric->second->Create<A>(params);
         }
     }
 
@@ -63,11 +65,13 @@ public:
 
 };
 
-std::shared_ptr<TFunction> TFunctionFactory::Create(Type type, const std::any &parameters) {
-    return Implementation->CreateFunction(type, parameters);
+template <typename A>
+std::shared_ptr<TFunction> TFunctionFactory::Create(Type type, const A &parameters) {
+    return Implementation->CreateFunction<A>(type, parameters);
 }
 
 TFunctionFactory::TFunctionFactory() 
-    : Implementation(std::make_shared<TFunctionFactory::PImpl>()) {}
+    : Implementation(std::make_shared<TFunctionFactory::PImpl>()) {
+}
 
 TFunctionFactory::~TFunctionFactory(){}

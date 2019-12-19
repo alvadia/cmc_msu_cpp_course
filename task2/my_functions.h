@@ -31,7 +31,8 @@ public:
 class TFunctionIdentity: public TFunction {
 
 public:
-    TFunctionIdentity(const std::any &parameters);
+template<typename T>
+    TFunctionIdentity(const T &parameters);
     virtual double operator()(double x) const override;
     virtual std::string ToString() const override;
     virtual double GetDerivative(double x) const override;
@@ -41,7 +42,8 @@ class TFunctionConstant: public TFunction {
     double value;
 
 public:
-    TFunctionConstant(const std::any &parameters);
+template<typename T>
+    TFunctionConstant(const T &parameters);
     virtual double operator()(double x) const override;
     virtual std::string ToString() const override;
     virtual double GetDerivative(double x) const override;
@@ -51,7 +53,8 @@ class TFunctionPower: public TFunction {
     double exponent;
 
 public:
-    TFunctionPower(const std::any &parameters);
+template<typename T>
+    TFunctionPower(const T &parameters);
     virtual double operator()(double x) const override;
     virtual std::string ToString() const override;
     virtual double GetDerivative(double x) const override;
@@ -59,7 +62,8 @@ public:
 
 class TFunctionExponent: public TFunction {
 public:
-    TFunctionExponent(const std::any &parameters);
+template<typename T>
+    TFunctionExponent(const T &parameters);
     virtual std::string ToString() const override;
     virtual double operator()(double x) const override;
     virtual double GetDerivative(double x) const override;
@@ -69,7 +73,8 @@ class TFunctionPolynomial: public TFunction {
     std::vector<double> coefficients;
 
 public:
-    TFunctionPolynomial(const std::any &parameters);
+template<typename T>
+    TFunctionPolynomial(const T &parameters);
     virtual double operator()(double x) const override;
     virtual std::string ToString() const override;
     virtual double GetDerivative(double x) const override;

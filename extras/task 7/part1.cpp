@@ -1,18 +1,25 @@
 #include <iostream>
 #include <cassert>
 
-template<char ...charstring>
+template<char c, char...charstring>
 struct mystr {
-    static constexpr size_t size = sizeof...(charstring);
+    static constexpr size_t size = sizeof(c) + sizeof...(charstring);
 
     template <char ...addend> 
     constexpr auto operator+(mystr<addend...> const &augend) const noexcept {
-        return mystr<charstring..., addend...>();
+        return mystr<c, charstring..., addend...>();
     }
 
+    constexpr bool operator==(mystr<c> const &sample) const noexcept {
+        return true;
+    }
+    template <char ...model>
+    constexpr bool operator==(mystr<c, model...> const &sample) const noexcept {
+        return mystr<model...>()==mystr<charstring...>();
+    }
     template <char ...model>
     constexpr bool operator==(mystr<model...> const &sample) const noexcept {
-        return size == sample.size;
+        return false;
     }
 };
 

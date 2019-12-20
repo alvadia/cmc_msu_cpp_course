@@ -3,8 +3,6 @@
 
 template<char c, char...charstring>
 struct mystr {
-    static constexpr size_t size = sizeof(c) + sizeof...(charstring);
-
     template <char ...addend> 
     constexpr auto operator+(mystr<addend...> const &augend) const noexcept {
         return mystr<c, charstring..., addend...>();
